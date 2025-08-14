@@ -290,7 +290,7 @@ class Wallet(models.Model):
                 }
                 payload = { 
                    "transfer_code": code, 
-                   "otp": otp
+                   "status": otp
                 }
                 response = requests.post(url, json=payload, headers=headers)
                 if response.status_code == 200:
