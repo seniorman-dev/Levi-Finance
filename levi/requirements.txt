@@ -1,0 +1,59 @@
+
+
+Meta attributes for Djangor Rest Framework Serializer Classess
+
+| Attribute          | Description                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `model`            | The Django model class the serializer is based on (required for `ModelSerializer`).              |
+| `fields`           | A list/tuple of field names to include, or `'__all__'` to include all model fields.              |
+| `exclude`          | A list/tuple of field names to exclude (cannot be used with `fields`).                           |
+| `read_only_fields` | A list of fields that should be read-only.                                                       |
+| `extra_kwargs`     | A dictionary of extra settings for specific fields (e.g., `{'password': {'write_only': True}}`). |
+| `depth`            | Controls how deep nested relationships are serialized (e.g., `depth = 1`).                       |
+
+
+
+
+
+Meta attributes for Django Model Classess
+
+| Attribute              | Description                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `ordering`             | Default ordering for querysets, e.g. `['-created_at']`.                                                                  |
+| `verbose_name`         | Human-readable singular name of the model, e.g. `"Transaction"`.                                                         |
+| `verbose_name_plural`  | Plural name for the model, e.g. `"Transactions"`.                                                                        |
+| `db_table`             | Custom database table name to use instead of the default (`app_model`).                                                  |
+| `unique_together`      | Sets a compound unique constraint across multiple fields. *(Deprecated in favor of `UniqueConstraint` in `constraints`)* |
+| `permissions`          | Custom permissions to be created with the model, e.g. `[("can_approve", "Can approve item")]`.                           |
+| `default_related_name` | Default name for reverse relationships (e.g. `user.posts` instead of `user.post_set`).                                   |
+| `indexes`              | List of custom indexes to apply on the table.                                                                            |
+| `constraints`          | List of model-level database constraints like `UniqueConstraint`, `CheckConstraint`, etc.                                |
+
+
+//  python manage.py makemigrations
+//  python manage.py migrate
+//  python manage.py runserver
+
+
+
+//  RESTFRAMEWORK GENERICS
+| **Generic View**               | **HTTP Methods**                | **Purpose**                              |
+| ------------------------------ | ------------------------------- | ---------------------------------------- |
+| `ListAPIView`                  | `GET`                           | List all instances                       |
+| `CreateAPIView`                | `POST`                          | Create a new instance                    |
+| `RetrieveAPIView`              | `GET`                           | Retrieve a single instance               |
+| `UpdateAPIView`                | `PUT`, `PATCH`                  | Update an instance                       |
+| `DestroyAPIView`               | `DELETE`                        | Delete an instance                       |
+| `ListCreateAPIView`            | `GET`, `POST`                   | List all and create a new instance       |
+| `RetrieveUpdateAPIView`        | `GET`, `PUT`, `PATCH`           | Retrieve and update an instance          |
+| `RetrieveDestroyAPIView`       | `GET`, `DELETE`                 | Retrieve and delete an instance          |
+| `RetrieveUpdateDestroyAPIView` | `GET`, `PUT`, `PATCH`, `DELETE` | Retrieve, update, and delete an instance |
+
+//  FOR DRF VIEWS
+| **Method to Override**             | **Purpose**                              |
+| ---------------------------------- | ---------------------------------------- |
+| `get_queryset(self)`               | Customize the queryset dynamically       |
+| `get_serializer_class(self)`       | Use different serializers based on logic |
+| `perform_create(self, serializer)` | Custom logic when saving a new object    |
+| `perform_update(self, serializer)` | Custom logic when updating an object     |
+| `perform_destroy(self, instance)`  | Custom logic when deleting an object     |
