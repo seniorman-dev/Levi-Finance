@@ -270,6 +270,39 @@ class Wallet(models.Model):
                 raise Exception({"error": f"Failed to connect to Paystack: {response.text}"})
     
     
+    def finalize_transfer(
+        self, 
+        code: str, 
+        otp: str, 
+    ) -> dict:
+        """Deduct money from the merchant wallet and credit actual bank account of the customer"""
+        if code is None:
+            raise ValidationError({"error": "Transfer code can't be empty"})
+        elif otp is None:
+            raise ValidationError({"error": "Transfer otp or status can't be empty"})
+        else:
+            with transaction.atomic():
+                # Call Paystack Bank Withdrawal API to withdraw from user bank
+                url = "https://api.paystack.co/transfer/finalize_transfer"
+                headers = {
+                    "Authorization": f"Bearer {settings.PAYSTACK_TEST_SECRET_KEY}",
+                    "Content-Type": "application/json"
+                }
+                payload = { 
+                   "transfer_code": code, 
+                   "otp": otp
+                }
+                response = requests.post(url, json=payload, headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("status") is True:
+                        print(data)
+                        return data
+                    else:
+                        raise Exception({"error": f"Paystack error: {data.get('message')}"})
+                else:
+                    raise Exception({"error": f"Failed to connect to Paystack: {response.text}"})
+    
     
     #WALLET to BANK TRANSFER
     def bank_transfer(
@@ -278,7 +311,7 @@ class Wallet(models.Model):
         recipient_code: str, 
         transfer_pin: int, 
         reason: str
-    ):
+    )-> dict:
         """Deduct money from the wallet and credit actual bank account"""
         if amount <= 0:
             raise ValidationError({"error": "Deposit amount must be positive or greater than 0"})
@@ -304,6 +337,13 @@ class Wallet(models.Model):
                 if response.status_code == 200:
                     data = response.json()
                     if data.get("status") is True:
+                        
+                        #call the finalize transfer api
+                        self.finalize_transfer(
+                            code=data['transfer_code'],
+                            otp=data['status']
+                        )
+                        
                         
                         # Deduct balance and log transaction
                         self.balance -= amount
@@ -332,8 +372,8 @@ class Wallet(models.Model):
                             recipient_list=[self.user.email]
                         )
                         # optionally create a Transaction object here
-                        print(data["data"])
-                        return data["data"]
+                        print(data)
+                        return data
                     else:
                         raise Exception({"error": f"Paystack error: {data.get('message')}"})
                 else:
