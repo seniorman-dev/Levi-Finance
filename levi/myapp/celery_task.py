@@ -3,7 +3,7 @@ from celery import shared_task
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
-from .models import User, BankDetail, Wallet, Transaction
+from .models import BankDetail, Wallet, Transaction
 import logging
 
 
@@ -11,7 +11,7 @@ import logging
 
 
 
-#User = get_user_model()
+User = get_user_model()
 logger = logging.getLogger(__name__)
 
 @shared_task

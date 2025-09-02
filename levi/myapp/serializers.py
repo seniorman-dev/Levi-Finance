@@ -26,7 +26,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         """Create and return a new user with a hashed password"""
         first_name = validated_data['first_name']
         last_name = validated_data['last_name']
-        
+         
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)  # 🔐 Hash the password
@@ -44,8 +44,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
         return user
     
-
-
 
 
 
@@ -207,7 +205,7 @@ class PanicPinSerializer(serializers.Serializer):
 
 
 #DEPOSIT FROM BANK TO WALLET
-class DepositSerializer(serializers.Serializer):
+class DepositSerializer(serializers.ModelSerializer):
     """Serializer for deposit operations"""
     amount = serializers.DecimalField(max_digits=12, decimal_places=2,)
     description = serializers.CharField(required=False, allow_blank=True)
@@ -273,7 +271,7 @@ class RecipientCodeSerializer(serializers.Serializer):
 
 
 #WALLET TO WALLET TRANSFER
-class TransferSerializer(serializers.Serializer):
+class TransferSerializer(serializers.ModelSerializer):
     """Serializer for transfer operations"""
     amount = serializers.DecimalField(max_digits=12, decimal_places=2,)
     recipient_user_id = serializers.CharField(max_length=50, required=True,)
@@ -318,7 +316,7 @@ class TransferSerializer(serializers.Serializer):
 
 
 #WALLET TO BANK TRANSFER
-class BankTransferSerializer(serializers.Serializer):
+class BankTransferSerializer(serializers.ModelSerializer):
     """Serializer for transfer operations"""
     amount = serializers.DecimalField(max_digits=12, decimal_places=2,)
     recipient_code = serializers.CharField(max_length=50, required=True,)
