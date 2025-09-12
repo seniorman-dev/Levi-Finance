@@ -22,27 +22,37 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
         }
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict):
         """Create and return a new user with a hashed password"""
         first_name = validated_data['first_name']
         last_name = validated_data['last_name']
+        email = validated_data['email']
          
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)  # 🔐 Hash the password
         
-        #SORT GMAIL SMTP then call this
-        #user.email_user(subject="Welcome to Levi Finance!", message= f"bla bla bla {first_name} {last_name}", from_email="noreply@levifinance.com",)
+        #SORT GMAIL SMTP STUFF IN THE SETTINGS, then call this
+        '''user.email_user(
+            subject= "Welcome to Go-Levi!", 
+            message= f"Hey {first_name} {last_name}!\nWe're delighted to have you onboard and we say cheers to seamless banking with us.", 
+            from_email= "noreply@levifinance.com", 
+            to_email= email
+        )'''
         
         #CREATE NOTIFICATION OBJECT FOR THE USER
         Notification.objects.create(
             user=user,
-            title=f"Welcome to Levi Finance {first_name}!",
-            content=f"gear up for express financial services.",
+            title=f"Welcome to Go-Levi {first_name}!",
+            content=f"Gear up as we take you on a journey to seamless banking.",
             type="normal"  #alert, normal, promotion
         )
+        
+        #FINALLY SAVED THE USER OBJECT TO DATABASE (SQLite)
         user.save()
         return user
+    
+    
     
 
 
@@ -55,7 +65,7 @@ class UserLoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
     
     
-    def validate(self, data):
+    def validate(self, data: dict):
         """Validate user credentials"""
         email = data.get('email',)
         password = data.get('password',)
@@ -65,13 +75,13 @@ class UserLoginSerializer(serializers.Serializer):
         
         if email is None or password is None:
             raise serializers.ValidationError({"error": 'Email and password are required'})
-
+        
         user = authenticate(
             request=request,
             email=email,
             password=password
         )
-
+        
         if user is None:
             raise serializers.ValidationError({"error": "Invalid login credentials."})
 
@@ -79,8 +89,7 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError({"error": "This account is inactive."})
         # Update last login time
         update_last_login(None, user)
-        data["user"] = user
-        return data
+        return user
     
 
 
@@ -89,7 +98,7 @@ class UserLoginSerializer(serializers.Serializer):
 class BasicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'user_name', 'avatar', 'is_active', 'date_joined', 'kyc_verified')
+        fields = ("id", 'email', 'first_name', 'last_name', 'user_name', 'avatar', 'is_active', 'date_joined', 'kyc_verified')
 
 
 
@@ -122,11 +131,11 @@ class BankDetailSerializer(serializers.ModelSerializer):
         model = BankDetail
         fields = (
             'id', 'bank_name', 'account_name', 'account_number', 
-            'bank_code', 'recipient_code', 'nuban', 'is_primary'
+            'bank_code', 'recipient_code', 'nuban', 'is_primary', 'created_at'
         )
         read_only_fields = ('id',)
 
-    def validate(self, data):
+    def validate(self, data: dict):
         """Validate bank details"""
         user = self.context['request'].user
 
@@ -165,8 +174,8 @@ class WalletSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     """Serializer for transactions"""
-    recipient_email = serializers.EmailField(source='recipient.email', read_only=True)
-    bank_detail = BankDetailSerializer(read_only=True)
+    #recipient_email = serializers.EmailField(source='recipient.email', read_only=True)
+    #bank_detail = BankDetailSerializer(read_only=True)
      
     class Meta:
         model = Transaction
@@ -227,7 +236,7 @@ class DepositSerializer(serializers.ModelSerializer):
             'created_at',
         )
     
-    def validate_amount(self, value):
+    def validate_amount(self, value: int):
         """Validate the deposit amount"""
         if value <= 0:
             raise serializers.ValidationError({"error":'Amount must be greter than 0'})
@@ -295,7 +304,7 @@ class TransferSerializer(serializers.ModelSerializer):
             'created_at',
         )
 
-    def validate(self, data):
+    def validate(self, data: dict):
         user = self.context['request'].user
         if not hasattr(user, 'wallet'):
             raise serializers.ValidationError({"error": "User does not have a wallet."})
@@ -340,11 +349,11 @@ class BankTransferSerializer(serializers.ModelSerializer):
             'created_at',
         )
 
-    def validate(self, attrs):
+    def validate(self, data: dict):
         user = self.context['request'].user
         if not hasattr(user, 'wallet'):
             raise serializers.ValidationError({"error": "User does not have a wallet."})
-        return attrs
+        return data
 
     def save(self, **kwargs):
         user = self.context['request'].user
@@ -373,8 +382,16 @@ class ReportTransactionSerializer(serializers.Serializer):
 #FOR SENDING EMAILS
 class EmailSerializer(serializers.Serializer):
     """Serializer for sending emails"""
+    from_email = serializers.EmailField()
+    to_email = serializers.EmailField()
     subject = serializers.CharField()
     message = serializers.CharField()
+    
+    '''def validate_to_email(self, value: str) -> str:
+        """Ensure the receiver email is valid"""
+        if value == self.initial_data.get("from_email"):
+            raise serializers.ValidationError("Sender and receiver email cannot be the same.")
+        return value'''
     
     def validate_subject(self, value: str) -> str:
         """Validate the email subject"""
@@ -402,7 +419,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id',)
 
-    def validate(self, data):
+    def validate(self, data: dict):
         """Validate notification details"""
         user = self.context['request'].user
 

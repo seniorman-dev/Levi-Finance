@@ -21,7 +21,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 
-from .celery_task import delete_user_in_5_days
+from .tasks import delete_user_in_5_days
 
 from .models import Notification, User, BankDetail, Wallet, Transaction
 
@@ -56,6 +56,15 @@ class UserRegistrationView(generics.GenericAPIView):
             Wallet.objects.create(user=user, balance=0.00, currency='NGN')
             # ✅ Generate JWT token pair
             refresh = RefreshToken.for_user(user=user)
+            
+            #CREATE NOTIFICATION AFTER SUCCESSFUL TRANASACTION REPORT
+            Notification.objects.create(
+                user=user,
+                title=f"Welcome to Go-Levi!",
+                content=f"Take a seat and enjoy the ride through financial ease.",
+                type="normal"  #alert, normal, promotion
+            )
+            
             return Response({
                 "refresh": str(refresh),  #remove token
                 "access": str(refresh.access_token),
@@ -79,27 +88,31 @@ class UserLoginView(generics.GenericAPIView):
     """View for user login"""
     permission_classes = [permissions.AllowAny]
     serializer_class = UserLoginSerializer
+    
 
+        
+    
     def post(self, request: Request) -> Response:
-        """Handle user login"""
-        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer = UserLoginSerializer(data=request.data, context={'request': request})
 
         if serializer.is_valid():
-            user = serializer.validated_data["user"]  # ✅ fixed this line
-            refresh = RefreshToken.for_user(user=user)
+           user = serializer.validated_data   # ✅ use this, not self.get_object()
+           refresh = RefreshToken.for_user(user)
 
-            return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-                "message": "User logged in successfully"  # you had "registered"
-            }, status=status.HTTP_200_OK)
+           return Response({
+               "refresh": str(refresh),
+               "access": str(refresh.access_token),
+               "message": "User logged in successfully"
+           }, status=status.HTTP_200_OK)
 
-        return Response({
-           "message": "Login failed",
-           "errors": serializer.errors
-           }, 
-           status=status.HTTP_400_BAD_REQUEST
+        return Response(
+           {
+            "message": "Login failed",
+            "errors": serializer.errors,
+        },
+        status=status.HTTP_400_BAD_REQUEST,
         )
+
 
 
 
@@ -108,7 +121,7 @@ class UserLogoutView(generics.GenericAPIView):
     """View for user logout"""
     permission_classes = [permissions.IsAuthenticated]
     
-    def post(self, request):
+    def post(self, request: Request):
         """Handle user logout"""
         # Delete the token
         request.auth.delete()
@@ -127,30 +140,34 @@ class SoftDeleteUserView(generics.DestroyAPIView):
     def get_object(self):
         return self.request.user
 
-    def perform_destroy(self, user):
+    def perform_destroy(self, instance):
+        
+        #user = self.get_object()
         # 1. Soft delete
-        user.is_deleted = True
-        user.deleted_at = timezone.now()
-        user.save()
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.save()
 
         # 2. Invalidate all tokens (SimpleJWT-based)
         try:
-            tokens = OutstandingToken.objects.filter(user=user)
+            tokens = OutstandingToken.objects.filter(user=instance)  #instance
             for token in tokens:
                 BlacklistedToken.objects.get_or_create(token=token)
         except:
             pass  # silently fail if not using token blacklisting
 
         # 3. Optionally, also log them out by deleting session
-        if hasattr(user, 'auth_token'):
-            user.auth_token.delete()
+        if hasattr(instance, 'auth_token'):
+            instance.auth_token.delete()
 
         # (Optional) 4. Send a Celery task or log a cron timestamp for hard-deletion
-        delete_user_in_5_days.delay(user.id)
+        #delete_user_in_5_days.delay(user_id=instance.id)
+        # Schedule Celery task to run in 5 days 
+        delete_user_in_5_days.apply_async((instance.id,), countdown=5*24*60*60)
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args, **kwargs):
         user = self.get_object()
-        self.perform_destroy(user)
+        self.perform_destroy(instance=user)
         return Response({
             "message": "Account marked for deletion. Your data will be removed in 5 days."},
             status=status.HTTP_204_NO_CONTENT
@@ -162,6 +179,7 @@ class PasswordResetView(generics.GenericAPIView):
 
     """View for sending OTP to user's email"""
     permission_classes = [permissions.AllowAny]
+    
 
     def post(self, request: Request) -> Response:
         email = request.data.get('email')
@@ -176,7 +194,7 @@ class PasswordResetView(generics.GenericAPIView):
         # Generate a random 4-digit OTP
         otp = str(random.randint(1000, 9999))
 
-        # Cache it with a timeout of 3 minutes (180 seconds)
+        # Cache it with a timeout of 3 minutes (180  seconds)
         cache.set(f'password_reset_otp_{email}', otp, timeout=180)
         
         # Log the otp
@@ -238,8 +256,13 @@ class CurrentUserView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = BasicUserSerializer
     
+    
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        if not user or not user.is_authenticated:
+           raise Response({"message":"Authentication required."})
+        return user
+
 
 
 
@@ -447,7 +470,7 @@ class DepositView(generics.GenericAPIView):
                 subject=subject,
                 message=f"You've successfully deposited ₦{amount} in your wallet.",
                 from_email='support@levifinance.com',
-                #[request.user.email]
+                to_email=user.email
             )'''
             
             # Deposit the amount
@@ -546,7 +569,7 @@ class ReportTransactionView(generics.GenericAPIView):
     """View for reporting a transaction"""
     permission_classes = [permissions.IsAuthenticated]
     
-    def post(self, request: Request, transaction_id) -> Response:
+    def post(self, request: Request, transaction_id: str) -> Response:
         """Handle transaction report"""
         transaction = get_object_or_404(Transaction, transaction_id=transaction_id, user=request.user)
         
@@ -578,23 +601,25 @@ class ReportTransactionView(generics.GenericAPIView):
 
 class SendEmailView(generics.GenericAPIView):
     """View for sending emails to users"""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     
-    def post(self, request: Request, user_id: int) -> Response:
+    #to get user object if authenticated
+    def get_object(self):
+        return self.request.user
+    
+    def post(self, request: Request,) -> Response:
         """Send email to a user"""
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = EmailSerializer(data=request.data)
         
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
+            from_email = serializer.validated_data['from_email']
+            to_email = serializer.validated_data['to_email']
             subject = serializer.validated_data['subject']
             message = serializer.validated_data['message']
             
             # Send the email
-            user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
+            send_mail(subject=subject, message=message, from_email=from_email, recipient_list=[to_email])
             
             return Response({'message': 'Email sent successfully'}, status=status.HTTP_200_OK)
         

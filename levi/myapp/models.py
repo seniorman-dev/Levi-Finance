@@ -148,9 +148,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Return the short name for the user."""
         return self.first_name
 
-    def email_user(self, subject, message, from_email=None, **kwargs):
+    def email_user(self, subject, message, from_email=None, to_email=None, **kwargs):
         """Send an email to this user."""
-        send_mail(subject, message, from_email, [self.email], **kwargs)
+        send_mail(subject, message, from_email, [to_email], **kwargs)
         
     def soft_delete(self):
         self.is_deleted = True
@@ -175,7 +175,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class BankDetail(models.Model):
     """Bank account details for users"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bank_details')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bank_details',)
     bank_name = models.CharField(max_length=100)
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=50)
@@ -210,6 +210,14 @@ class Wallet(models.Model):
     is_frozen = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    #ADDED THIS TO SEE WHAT'S UP
+    class Meta:
+        models.UniqueConstraint(
+            fields=['user', 'balance', 'currency', 'is_frozen', 'created_at'],
+            name='unique_one_and_only_wallet_for_user'
+        )
+        ordering = ['-created_at'] 
     
     
     #HUMAN READABLE CONTEXT
@@ -369,9 +377,8 @@ class Wallet(models.Model):
                             subject=subject,
                             message=f"You've successfully withdrawn ₦{amount} from you wallet.",
                             from_email='noreply@levifinance.com',
-                            recipient_list=[self.user.email]
+                            to_email=self.user.email
                         )
-                        # optionally create a Transaction object here
                         print(data)
                         return data
                     else:
@@ -382,7 +389,7 @@ class Wallet(models.Model):
     
             
     #WALLET to WALLET TRANSFER
-    def transfer(self, amount, recipient_user_id, transfer_pin, description):
+    def transfer(self, amount: int, recipient_user_id: str, transfer_pin: str, description: str):
         """Transfer money to another user's wallet using their user ID"""
 
         from .models import Wallet, Transaction
@@ -400,7 +407,7 @@ class Wallet(models.Model):
             raise ValidationError({"error": "You cannot transfer money to yourself"})
 
         elif transfer_pin is None:
-            raise ValidationError({"error": "Transfer PIN required"})
+            raise ValidationError({"error": "Transfer PIN is required"})
 
         try: 
             with transaction.atomic():
@@ -456,13 +463,13 @@ class Wallet(models.Model):
                        subject=subject,
                        message=f"You've successfully sent ₦{amount} to {recipient_user.get_full_name()}.",
                        from_email='noreply@levifinance.com',
-                       recipient_list=[self.user.email]
+                       to_email=self.user.email
                     )
                     recipient_user.email_user(
                        subject=subject,
                        message=f"{self.user.get_full_name()} just sent you ₦{amount}.",
                        from_email='noreply@levifinance.com',
-                       recipient_list=[recipient_user.email]
+                       to_email=self.user.email
                     )
 
         except User.DoesNotExist:
@@ -512,7 +519,7 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.transaction_id} - {self.transaction_type} - {self.amount}{self.currency}"
     
-    def freeze(self, reason):
+    def freeze(self, reason: str):
         """Freeze a transaction due to a report"""
         self.status = 'FROZEN'
         self.is_reported = True
@@ -552,6 +559,7 @@ class Notification(models.Model):
     
     class Meta:
         #unique_together = ('user', 'title', 'type', 'content',)
+        #field=['user', 'title', 'type', 'content',]
         models.UniqueConstraint(
             fields=['user', 'title', 'type', 'content',],
             name='unique_notification_per_user'

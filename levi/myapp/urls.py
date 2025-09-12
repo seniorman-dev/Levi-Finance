@@ -73,7 +73,7 @@ urlpatterns = [
     path('api/transactions/<str:transaction_id>/report/', views.ReportTransactionView.as_view(), name='report-transaction'),
 
     # Email
-    path('api/send-email/<int:user_id>/', views.SendEmailView.as_view(), name='send-email'),
+    path('api/send-email/', views.SendEmailView.as_view(), name='send-email'),
     
     # User Notifications
     path('api/notifications/', views.NotificationListCreateView.as_view(), name='notifications-list-create'), #GET #POST

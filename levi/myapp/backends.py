@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class EmailBackend(BaseBackend):
-    def authenticate(self, request, email=None, password=None, **kwargs):
+    def authenticate(self, request, email:str=None, password:str=None, **kwargs) -> None:
         print("[DEBUG] Custom EmailBackend called")
         try:
             user = User.objects.get(email=email)

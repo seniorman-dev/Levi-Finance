@@ -39,6 +39,7 @@ Meta attributes for Django Model Classess
 //  RESTFRAMEWORK GENERICS
 | **Generic View**               | **HTTP Methods**                | **Purpose**                              |
 | ------------------------------ | ------------------------------- | ---------------------------------------- |
+| 'GenericAPIView'               | 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' |    Supports all http methods     |
 | `ListAPIView`                  | `GET`                           | List all instances                       |
 | `CreateAPIView`                | `POST`                          | Create a new instance                    |
 | `RetrieveAPIView`              | `GET`                           | Retrieve a single instance               |
@@ -49,6 +50,8 @@ Meta attributes for Django Model Classess
 | `RetrieveDestroyAPIView`       | `GET`, `DELETE`                 | Retrieve and delete an instance          |
 | `RetrieveUpdateDestroyAPIView` | `GET`, `PUT`, `PATCH`, `DELETE` | Retrieve, update, and delete an instance |
 
+
+
 //  FOR DRF VIEWS
 | **Method to Override**             | **Purpose**                              |
 | ---------------------------------- | ---------------------------------------- |
@@ -57,3 +60,33 @@ Meta attributes for Django Model Classess
 | `perform_create(self, serializer)` | Custom logic when saving a new object    |
 | `perform_update(self, serializer)` | Custom logic when updating an object     |
 | `perform_destroy(self, instance)`  | Custom logic when deleting an object     |
+| 'get, post, put, patch, delete'  | availability depends on the generic api views you are extending in your view |
+
+
+
+
+//  SERIALIZERS
+| **Method to Override**             | **Purpose**                              |
+| ---------------------------------- | ---------------------------------------- |
+| `validate(self, data: dict)`         | Used to validate the general data of the serializer       |
+| `validate_<field-name>(self, value: Any)` | Used to run validations on a specific field |
+| `save(self, **kwargs)`               | Custom override for saving the serialized data |
+
+
+
+
+# INSTALL
+pip install redis
+pip install "celery[redis]"
+
+#If Redis:
+#Install: choco install redis-64 (on Windows with Chocolatey)
+
+#Start Redis server in the directory: 
+C:\Program Files\Memurai>memurai.exe
+
+
+#RUN THIS CELERY WORKER IN YOUR ROOT DJANGO PROJECT DIRECTORY WHILE REDIS BROKER IS RUNNING IN CMD AS WELL
+celery -A levi worker -l info  //for async task
+
+celery -A levi beat -l info  //for periodic task

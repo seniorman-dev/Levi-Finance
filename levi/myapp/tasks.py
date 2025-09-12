@@ -8,14 +8,14 @@ import logging
 
 
 
-
-
-
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
+
+
+# CREATE A SIMPLE CELERY TASK (PERIODIC OR CRON JOB)
 @shared_task
-def delete_user_in_5_days(user_id):
+def delete_user_in_5_days(user_id: int):
     try:
         user = User.objects.select_related().get(id=user_id, is_deleted=True)  #"select_related()" optimizes the query
         
@@ -27,3 +27,9 @@ def delete_user_in_5_days(user_id):
             logger.info(f"Deleted user {user.email} and related data.")
     except User.DoesNotExist:
         pass
+
+
+# CREATE A SIMPLE CELERY TASK (ASYNCIO TASK)
+@shared_task
+def add(x, y):
+    return x + y
