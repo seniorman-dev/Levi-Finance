@@ -70,7 +70,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'levi.urls'
+ROOT_URLCONF = 'levi.levi.urls'
 
 TEMPLATES = [
     {
