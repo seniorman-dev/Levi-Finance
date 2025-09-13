@@ -76,7 +76,7 @@ This project focuses on secure wallet management, reliable user authentication, 
 
    Backend Framework: Django, Django REST Framework (DRF)
 
-   Database: SQLite3 (default)
+   Database: SQLite3 (local-default) & PostGres (production)
 
    Authentication: JWT (JSON Web Tokens)
 
