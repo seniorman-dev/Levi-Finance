@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #DEBUG = True
 
 # Allowed hosts for production (⚠️ Warning: Only use "*" for development, never in production.)
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1", "[::1]"]
 
 
 
