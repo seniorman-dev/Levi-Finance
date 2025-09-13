@@ -1,0 +1,22 @@
+databases:
+  - name: go-levi-db
+    plan: free
+    databaseName: go_levi_db
+    user: go_levi_db_user
+
+services:
+  - type: web
+    plan: free
+    name: levi
+    runtime: python
+    buildCommand: './build.sh'
+    startCommand: 'python -m gunicorn levi.asgi:application -k uvicorn.workers.UvicornWorker'
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: go_levi_db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
