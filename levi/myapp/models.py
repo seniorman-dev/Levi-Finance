@@ -249,7 +249,7 @@ class Wallet(models.Model):
         #You’d need to manually check types inside the function, for example:
         
         if not all(isinstance(arg, str) for arg in [bank_code, account_number, account_name]):
-           raise TypeError("All arguments must be strings")
+           raise TypeError({"message":"All arguments must be strings"})
        
         """Fetch transfer recipient from a bank detail"""
         with transaction.atomic():
@@ -358,7 +358,7 @@ class Wallet(models.Model):
                         self.save()
                         
                         #date time of the trx
-                        trx_ref = f"LEVI-{timezone.now()}-{random.randint(1000, 9999)}"
+                        trx_ref = f"GO-LEVI-{timezone.now()}-{random.randint(1000, 9999)}"
                         # Record transactions for sender
                         Transaction.objects.create(
                             user=self.user,
@@ -376,7 +376,7 @@ class Wallet(models.Model):
                         self.user.email_user(
                             subject=subject,
                             message=f"You've successfully withdrawn ₦{amount} from you wallet.",
-                            from_email='noreply@levifinance.com',
+                            from_email='noreply@go-levi.com',
                             to_email=self.user.email
                         )
                         print(data)
@@ -421,6 +421,13 @@ class Wallet(models.Model):
                 if transfer_pin == self.user.panic_transfer_pin:
                     recipient_wallet.is_frozen = True
                     recipient_wallet.save()
+                    #CREATE NOTIFICATION AFTER SUCCESSFUL TRANSACTION REPORT
+                    Notification.objects.create(
+                      user=self.user,
+                      title=f"Transaction Reported",
+                      content=f"we have marked the transaction with the receipient - f'Name: {recipient_user.get_full_name()}\nEmail: {recipient_user.email}' for immediate investigation and a follow up email will be sent to you.",
+                      type="alert"  #alert, normal, promotion
+                    )
                 
                 if transfer_pin == self.user.transfer_pin or transfer_pin == self.user.panic_transfer_pin:
 
@@ -431,7 +438,7 @@ class Wallet(models.Model):
                     recipient_wallet.save()
                     
                     #date time of the trx
-                    trx_ref = f"LEVI-{timezone.now()}-{random.randint(1000, 9999)}"
+                    trx_ref = f"GO-LEVI-{timezone.now()}-{random.randint(1000, 9999)}"
 
                     # Record transactions for sender
                     Transaction.objects.create(
@@ -462,14 +469,14 @@ class Wallet(models.Model):
                     self.user.email_user(
                        subject=subject,
                        message=f"You've successfully sent ₦{amount} to {recipient_user.get_full_name()}.",
-                       from_email='noreply@levifinance.com',
+                       from_email='noreply@go-levi.com',
                        to_email=self.user.email
                     )
                     recipient_user.email_user(
                        subject=subject,
                        message=f"{self.user.get_full_name()} just sent you ₦{amount}.",
-                       from_email='noreply@levifinance.com',
-                       to_email=self.user.email
+                       from_email='noreply@go-levi.com',
+                       to_email=recipient_user.email
                     )
 
         except User.DoesNotExist:

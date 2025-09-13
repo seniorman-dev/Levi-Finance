@@ -57,14 +57,6 @@ class UserRegistrationView(generics.GenericAPIView):
             # ✅ Generate JWT token pair
             refresh = RefreshToken.for_user(user=user)
             
-            #CREATE NOTIFICATION AFTER SUCCESSFUL TRANASACTION REPORT
-            Notification.objects.create(
-                user=user,
-                title=f"Welcome to Go-Levi!",
-                content=f"Take a seat and enjoy the ride through financial ease.",
-                type="normal"  #alert, normal, promotion
-            )
-            
             return Response({
                 "refresh": str(refresh),  #remove token
                 "access": str(refresh.access_token),

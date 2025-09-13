@@ -40,6 +40,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             to_email= email
         )'''
         
+        
+        #FINALLY SAVED THE USER OBJECT TO DATABASE (SQLite)
+        user.save()
+        
         #CREATE NOTIFICATION OBJECT FOR THE USER
         Notification.objects.create(
             user=user,
@@ -47,9 +51,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             content=f"Gear up as we take you on a journey to seamless banking.",
             type="normal"  #alert, normal, promotion
         )
-        
-        #FINALLY SAVED THE USER OBJECT TO DATABASE (SQLite)
-        user.save()
         return user
     
     
