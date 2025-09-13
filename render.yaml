@@ -9,6 +9,10 @@ services:
     plan: free
     name: golevi
     runtime: python
+    rootDir: levi    # 👈 add this line
+    #buildCommand: "pip install -r requirements.txt"
+    #startCommand: "gunicorn levi.asgi:application -k uvicorn.workers.UvicornWorker"
+
     buildCommand: './build.sh'
     startCommand: 'python -m gunicorn levi.asgi:application -k uvicorn.workers.UvicornWorker'
     envVars:
