@@ -27,7 +27,7 @@ def delete_user_in_5_days(user_id: int):
             # Send the email
             send_mail(
                subject=f"Hello, {user.get_short_name()}.", 
-               message="Your account has been deleted and your details completely erased from our system having reached the 5-days recovery period.\nLove,\nGo-Levi Team", 
+               message="Your account has been deleted and your information completely erased from our system, having reached the 5-days recovery period.\nLove,\nGo-Levi Team", 
                from_email="noreply@go-levi.com", 
                recipient_list=[f'{user.email}']
             )
