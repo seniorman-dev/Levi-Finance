@@ -90,3 +90,8 @@ C:\Program Files\Memurai>memurai.exe
 celery -A levi worker -l info  //for async task
 
 celery -A levi beat -l info  //for periodic task
+
+
+
+#That will generate a requirements.txt with everything you’ve installed (Django, djangorestframework, etc).
+pip freeze > requirements.txt
