@@ -87,4 +87,4 @@ This project focuses on secure wallet management, reliable user authentication, 
 
 
 Link to PostMan Documentation below:
-"coming soon"...
+(https://luround-apis.postman.co/workspace/My-Workspace~103f3353-b5b2-4540-874f-a45aa7ae2ea4/collection/30693493-0d96869e-2f54-4bb8-87ff-8b67240cebfe?action=share&creator=30693493)
