@@ -32,8 +32,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 #DEBUG = True
 
-# Allowed hosts for production
-ALLOWED_HOSTS = []
+# Allowed hosts for production (⚠️ Warning: Only use "*" for development, never in production.)
+ALLOWED_HOSTS = ["*"]
 
 
 
