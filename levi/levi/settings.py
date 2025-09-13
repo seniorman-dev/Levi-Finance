@@ -99,12 +99,16 @@ WSGI_APPLICATION = 'levi.wsgi.application'
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }'''
-#python -m gunicorn levi.asgi:application -k uvicorn.workers.UvicornWorker (RUNS ON MAC & Linux Only)
+
+
 #Replace the SQLite DATABASES configuration with PostgreSQL
 DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default=os.environ.get(key="postgresql://go_levi_db_user:saK3m94l9E3NagUFeKsIV3etGURdnP6c@dpg-d32qa17diees73911ap0-a/go_levi_db", default="sqlite:///db.sqlite3"),
+        default=os.environ.get(
+            key="postgresql://go_levi_progresdb_user:PU64fUGSydhMAG0uFUU9vrcoPARAnKZg@dpg-d32t7pfdiees7393et30-a.oregon-postgres.render.com/go_levi_progresdb", 
+            default="sqlite:///db.sqlite3"
+        ),
         conn_max_age=600
     )
 }
