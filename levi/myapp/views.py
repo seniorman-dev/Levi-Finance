@@ -241,6 +241,41 @@ class ConfirmPasswordView(generics.GenericAPIView):
 
         return Response({'message': 'Password reset successful. You can now log in with your new password.'}, status=status.HTTP_200_OK)
     
+
+
+
+class ChangePasswordView(generics.GenericAPIView):
+    """View for updating and setting new password"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        email: str = request.data.get("email")
+        old_password: str = request.data.get('old_password')
+        new_password: str = request.data.get('new_password')
+
+        if not all([old_password, new_password]):
+            return Response({'error': 'Email, old and new password are required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=email)
+
+            if not user.check_password(old_password):  # ✅ use check_password
+                return Response(
+                    {"error": "Old password is invalid or incorrect"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            user.set_password(new_password)  # ✅ hashes automatically
+            user.save()
+            return Response(
+                {"message": "Password updated successfully"},
+                status=status.HTTP_200_OK,
+            )                    
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+    
    
     
 

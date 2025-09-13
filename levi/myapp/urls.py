@@ -46,6 +46,7 @@ urlpatterns = [
     path('api/auth/logout/', views.UserLogoutView.as_view(), name='logout'),
     path('api/auth/password-reset/', views.PasswordResetView.as_view(), name='password-reset'),
     path('api/auth/password-reset/confirm/', views.ConfirmPasswordView.as_view(), name='confirm-password-reset'),
+    path("api/auth/update-password/", views.ChangePasswordView.as_view(), name="update-account--password"),
     path('api/auth/users/delete/', views.SoftDeleteUserView.as_view(), name='soft-delete-user'),
     
     # User Profile
