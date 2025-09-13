@@ -161,8 +161,8 @@ REST_FRAMEWORK = {
 #DRF SIMPLE JWT SETTINGS
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),   # 24 hours expiry
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),    # refresh valid for 7 days
-    "ROTATE_REFRESH_TOKENS": True,                  # optional: issue new refresh on use
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),    # refresh valid for 1 day
+    "ROTATE_REFRESH_TOKENS": False,                  # optional: issue new refresh on use
     "BLACKLIST_AFTER_ROTATION": True,               # optional: blacklist old refresh
     "AUTH_HEADER_TYPES": ("Bearer",),
 }

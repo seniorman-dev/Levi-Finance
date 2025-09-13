@@ -33,12 +33,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(password)  # 🔐 Hash the password
         
         #SORT GMAIL SMTP STUFF IN THE SETTINGS, then call this
-        '''user.email_user(
+        user.email_user(
             subject= "Welcome to Go-Levi!", 
             message= f"Hey {first_name} {last_name}!\nWe're delighted to have you onboard and we say cheers to seamless banking with us.", 
-            from_email= "noreply@levifinance.com", 
+            from_email= "noreply@go-levi.com", 
             to_email= email
-        )'''
+        )
         
         
         #FINALLY SAVED THE USER OBJECT TO DATABASE (SQLite)
@@ -99,7 +99,30 @@ class UserLoginSerializer(serializers.Serializer):
 class BasicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", 'email', 'first_name', 'last_name', 'user_name', 'avatar', 'is_active', 'date_joined', 'kyc_verified')
+        fields = (
+            "id", 
+            'email', 
+            'first_name', 
+            'last_name', 
+            'user_name', 
+            'avatar', 
+            'is_active', 
+            'date_joined', 
+            'kyc_verified', 
+            'kyc_document',
+            'transfer_pin',
+            'panic_transfer_pin',
+            'phone_number',
+            'address',
+            'city',
+            'country',
+            'postal_code',
+            'date_of_birth',
+            'government_id',
+            'created_at',
+            'is_deleted',
+            'deleted_at',
+        )
 
 
 
