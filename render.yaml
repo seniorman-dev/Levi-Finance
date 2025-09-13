@@ -13,12 +13,14 @@ services:
     #buildCommand: "pip install -r requirements.txt"
     #startCommand: "gunicorn levi.asgi:application -k uvicorn.workers.UvicornWorker"
 
-    buildCommand: './build.sh'
+    #buildCommand: './build.sh'
+    buildCommand: "pip install -r ../requirements.txt"
+
     startCommand: 'python -m gunicorn levi.asgi:application -k uvicorn.workers.UvicornWorker'
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: go-levi-db
+          name: go_levi_db
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
