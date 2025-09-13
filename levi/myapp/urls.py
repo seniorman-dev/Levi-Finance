@@ -18,7 +18,7 @@ Including another URLconf
 # myapp/urls.py
 from django.urls import path
 from rest_framework.authtoken import views as jay
-from myapp import views
+from levi.myapp import views
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
