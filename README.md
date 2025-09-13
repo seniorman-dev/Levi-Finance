@@ -10,77 +10,81 @@ This project focuses on secure wallet management, reliable user authentication, 
 ✨ Features
 🔑 Authentication & Security
 
-User Signup, Login, Logout
+   User Signup, Login, Logout
 
-Password Reset (Forgot/Reset password flows)
+   Password Reset (Forgot/Reset password flows)
 
-JWT-based authentication
+   JWT-based authentication
 
-Secure handling of sensitive user data
+   Secure handling of sensitive user data
 
 👤 User Profile Management
 
-Fetch and update user profile details:
+   Fetch and update user profile details:
 
-First name, Last name, Username
+   First name, Last name, Username
 
-Avatar
+   Avatar
 
-KYC information
+   KYC information
 
-Login password
+   Login password
 
-Soft Delete
+   Soft Delete
 
 🏦 Bank Details
 
-CRUD operations for bank account information:
+   CRUD operations for bank account information:
 
-Create
+   Create
 
-Fetch
+   Fetch
 
-Update
+   Update
 
-Delete
+   Delete
 
 💳 Wallet / Account System
 
-Create wallet for each user
+   Create wallet for each user
 
-Check wallet balance
+   Check wallet balance
 
-Set & update transaction PIN
+   Set & update transaction PIN
 
-Set & update panic PIN (emergency fraud alert system)
+   Set & update panic PIN (emergency fraud alert system)
 
 💸 Transactions
 
-View transaction history
+   View transaction history
 
-Deposit funds into wallet
+   Deposit funds into wallet
 
-Withdraw funds to registered bank details
+   Withdraw funds to registered bank details
 
-Transfer funds between users (via username or user ID)
+   Transfer funds between users (via unique user ID)
 
-Report suspicious transactions (marks them as frozen)
+   Report suspicious transactions (marks them as frozen)
 
 📧 Email Notifications
 
-Transactional emails for account and wallet activities
+   Transactional emails for account and wallet activities
 
-Password reset email support
+   Password reset email support
 
 🛠 Tech Stack
 
-Backend Framework: Django, Django REST Framework (DRF)
+   Backend Framework: Django, Django REST Framework (DRF)
 
-Database: SQLite3 (default)
+   Database: SQLite3 (default)
 
-Authentication: JWT (JSON Web Tokens)
+   Authentication: JWT (JSON Web Tokens)
 
-Other Tools: Celery (for async tasks and cron jobs), Redis (message broker), SMTP (gmaiil smtp server for sending emails)
+   Other Tools: 
+   Celery (for async tasks and cron jobs for soft delete functionality), 
+   Redis (caching mechanism, message broker for soft delete functionality), 
+   SMTP (Gmail smtp server for sending emails)
 
 
 Link to PostMan Documentation below:
+"coming soon"...
