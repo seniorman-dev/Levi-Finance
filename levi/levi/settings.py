@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #add stuffs here
-    'myapp',  # Our Custom App
+    'levi.myapp',  # Our Custom App
     'rest_framework',  # For building APIs
     'rest_framework.authtoken',  # For token authentication
 ]
