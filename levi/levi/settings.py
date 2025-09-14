@@ -200,7 +200,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
 AUTHENTICATION_BACKENDS = [
     'myapp.backends.EmailBackend',  # Replace 'myapp' with your app name # Your custom backend
-    #'django.contrib.auth.backends.ModelBackend',  # Fallback to default
+    'django.contrib.auth.backends.ModelBackend',  # Fallback to default
 ]
 
 
@@ -212,6 +212,11 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 PAYSTACK_TEST_SECRET_KEY = config("PAYSTACK_SECRET_KEY")
 
 # CELERY BROKER URL FOR REDIS (TO RUN CRON JOBS)
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"   # Redis DB 0
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"   # Redis DB 0 For production, provision a Redis instance for render or upstash
 CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+
+
+# SECURITY HEADERS (for production)
+CSRF_TRUSTED_ORIGINS = ["https://golevi-webservice.onrender.com"]
+
 
