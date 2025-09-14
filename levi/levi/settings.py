@@ -33,10 +33,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #DEBUG = True
 
 # Allow all hosts for now, or specify your Render domain
-#ALLOWED_HOSTS = ['levi-finance.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['levi-finance.onrender.com', 'localhost', '127.0.0.1']
 
 # OR for development, you can allow all hosts (not recommended for production)
-ALLOWED_HOSTS = ["*"]
+#ALLOWED_HOSTS = ["*"]
 
 
 
@@ -89,25 +89,21 @@ WSGI_APPLICATION = 'levi.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-DATABASES = {
+'''DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}
+}'''
 
 
 #Replace the SQLite DATABASES configuration with PostgreSQL
-'''DATABASES = {
+DATABASES = {
     'default': dj_database_url.config(
-        # Replace this value with your local database's connection string.
-        default=os.environ.get(
-            key="postgresql://go_levi_progresdb_user:PU64fUGSydhMAG0uFUU9vrcoPARAnKZg@dpg-d32t7pfdiees7393et30-a.oregon-postgres.render.com/go_levi_progresdb", 
-            default="sqlite:///db.sqlite3"
-        ),
+        default=os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3"),
         conn_max_age=600
     )
-}'''
+}
 
 
 
