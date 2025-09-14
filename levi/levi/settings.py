@@ -33,10 +33,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #DEBUG = True
 
 # Allow all hosts for now, or specify your Render domain
-ALLOWED_HOSTS = ['levi-finance.onrender.com', 'localhost', '127.0.0.1']
+#ALLOWED_HOSTS = ['levi-finance.onrender.com', 'localhost', '127.0.0.1']
 
 # OR for development, you can allow all hosts (not recommended for production)
-#ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
+
 
 
 

@@ -49,6 +49,8 @@ class UserRegistrationView(generics.GenericAPIView):
     
     def post(self, request: Request) -> Response:
         serializer = UserRegistrationSerializer(data=request.data)
+        print("Raw body:", request.auth)
+        print("Data:", request.data)
         if serializer.is_valid():
             # Save the user from the serializer
             user = serializer.save()
