@@ -30,7 +30,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # Allow all hosts for now, or specify your Render domain
-ALLOWED_HOSTS = ['levi-finance.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    "golevi-webservice.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
+
 # OR for development, you can allow all hosts (not recommended for production)
 #ALLOWED_HOSTS = ["*"]
 
