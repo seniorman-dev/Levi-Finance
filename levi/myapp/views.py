@@ -49,7 +49,6 @@ class UserRegistrationView(generics.GenericAPIView):
     
     def post(self, request: Request) -> Response:
         serializer = UserRegistrationSerializer(data=request.data)
-        print("Raw body:", request.auth)
         print("Data:", request.data)
         if serializer.is_valid():
             # Save the user from the serializer
@@ -84,11 +83,9 @@ class UserLoginView(generics.GenericAPIView):
     serializer_class = UserLoginSerializer
     
 
-        
-    
     def post(self, request: Request) -> Response:
         serializer = UserLoginSerializer(data=request.data, context={'request': request})
-
+        print("Data:", request.data)
         if serializer.is_valid():
            user = serializer.validated_data   # ✅ use this, not self.get_object()
            refresh = RefreshToken.for_user(user)
@@ -117,6 +114,7 @@ class UserLogoutView(generics.GenericAPIView):
     
     def post(self, request: Request):
         """Handle user logout"""
+        print("Data:", request.data)
         # Delete the token
         request.auth.delete()
         
@@ -176,6 +174,7 @@ class PasswordResetView(generics.GenericAPIView):
     
 
     def post(self, request: Request) -> Response:
+        print("Data:", request.data)
         email = request.data.get('email')
         if not email:
             return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -196,13 +195,11 @@ class PasswordResetView(generics.GenericAPIView):
 
         # Send OTP to user's email
         send_mail(
-            'Your Password Reset OTP',
-            f'Your OTP for password reset is: {otp}',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            settings.EMAIL_HOST_USER,
-            settings.EMAIL_HOST_PASSWORD,
-            False,
+            subject='Your Password Reset OTP',
+            message=f'Your OTP for password reset is: {otp}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            
         )
 
         return Response({'message': 'OTP has been sent to your email'}, status=status.HTTP_200_OK)
@@ -216,6 +213,7 @@ class ConfirmPasswordView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request: Request) -> Response:
+        print("Data:", request.data)
         email = request.data.get('email')
         otp = request.data.get('otp')
         new_password = request.data.get('new_password')
@@ -251,6 +249,7 @@ class ChangePasswordView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
+        print("Data:", request.data)
         email: str = request.data.get("email")
         old_password: str = request.data.get('old_password')
         new_password: str = request.data.get('new_password')
@@ -287,6 +286,7 @@ class CurrentUserView(generics.RetrieveAPIView):
     
     
     def get_object(self):
+        print("request body:", self.request.body)
         user = self.request.user
         if not user or not user.is_authenticated:
            raise Response({"message":"Authentication required."})
@@ -409,7 +409,7 @@ class TransferPinView(generics.GenericAPIView):
     def post(self, request: Request) -> Response:
         """Set or update transfer pin"""
         serializer = TransferPinSerializer(data=request.data, context={'request': request})
-        
+        print("Data:", request.data)
         if serializer.is_valid():
             user = request.user
             new_pin = serializer.validated_data['new_pin']
@@ -432,7 +432,7 @@ class PanicPinView(generics.GenericAPIView):
     def post(self, request: Request) -> Response:
         """Set or update panic pin"""
         serializer = PanicPinSerializer(data=request.data, context={'request': request})
-        
+        print("Data:", request.data)
         if serializer.is_valid():
             user = request.user
             new_pin = serializer.validated_data['new_pin']
@@ -455,6 +455,7 @@ class RecipientView(generics.GenericAPIView):
 
     def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = RecipientCodeSerializer(data=request.data, context={'request': request}) #self.get_serializer(data=request.data, context={"request": request}) 
+        print("Data:", request.data)
         serializer.is_valid(raise_exception=True)
         result = serializer.save()
         return Response(result, status=status.HTTP_201_CREATED)
@@ -469,6 +470,7 @@ class DepositView(generics.GenericAPIView):
     def post(self, request: Request) -> Response:
         """Handle deposit request"""
         serializer = DepositSerializer(data=request.data)
+        print("Data:", request.data)
         
         if serializer.is_valid():
             user = request.user
@@ -534,6 +536,7 @@ class TransferView(generics.GenericAPIView):
 
     def post(self, request: Request, *args, **kwargs) -> Response:
         user = request.user
+        print("Data:", request.data)
         serializer = TransferSerializer(data=request.data, context={'request': request}) #self.get_serializer(data=request.data, context={"request": request}) 
         amount = serializer.validated_data['amount']
         serializer.is_valid(raise_exception=True)
@@ -556,6 +559,7 @@ class BankTransferView(generics.GenericAPIView):
 
     def post(self, request: Request, *args, **kwargs) -> Response:
         user = request.user
+        print("Data:", request.data)
         serializer = BankTransferSerializer(data=request.data, context={'request': request}) #self.get_serializer(data=request.data, context={"request": request}) 
         amount = serializer.validated_data['amount']
         serializer.is_valid(raise_exception=True)
@@ -584,6 +588,7 @@ class TransactionListView(generics.ListAPIView):
     def get(self, request: Request, *args, **kwargs) -> Response:
         """Get one transaction object by id for the current user"""
         try:
+            print("Data:", request.data)
             transaction_id = kwargs.get("id")  # assuming it's passed in the URL as /transactions/<id>/
             transaction = Transaction.objects.get(id=transaction_id, user=request.user)
             return transaction
@@ -600,6 +605,7 @@ class ReportTransactionView(generics.GenericAPIView):
     
     def post(self, request: Request, transaction_id: str) -> Response:
         """Handle transaction report"""
+        print("Data:", request.data)
         transaction = get_object_or_404(Transaction, transaction_id=transaction_id, user=request.user)
         
         serializer = ReportTransactionSerializer(data=request.data)
@@ -640,6 +646,7 @@ class SendEmailView(generics.GenericAPIView):
         """Send email to a user"""
         
         serializer = EmailSerializer(data=request.data)
+        print("Data:", request.data)
         
         if serializer.is_valid(raise_exception=True):
             from_email = serializer.validated_data['from_email']
