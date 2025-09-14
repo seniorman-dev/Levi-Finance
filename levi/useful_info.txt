@@ -1,5 +1,13 @@
 
 
+#create own virtual environment
+python -m venv .venv
+
+#activate virtual environment
+.venv\Scripts\activate
+
+
+
 Meta attributes for Djangor Rest Framework Serializer Classess
 
 | Attribute          | Description                                                                                      |

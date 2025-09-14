@@ -36,12 +36,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ALLOWED_HOSTS = ['levi-finance.onrender.com', 'localhost', '127.0.0.1']
 
 # OR for development, you can allow all hosts (not recommended for production)
-# ALLOWED_HOSTS = ['*']
+#ALLOWED_HOSTS = []
 
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -51,7 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #add stuffs here
-    'levi.myapp',  # Our Custom App
+    'myapp.apps.MyappConfig',   # explicit & safe # Our Custom App
     'rest_framework',  # For building APIs
     'rest_framework.authtoken',  # For token authentication
 ]
@@ -66,7 +65,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'levi.levi.urls'
+ROOT_URLCONF = 'levi.urls'
 
 TEMPLATES = [
     {
@@ -89,16 +88,16 @@ WSGI_APPLICATION = 'levi.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-'''DATABASES = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}'''
+}
 
 
 #Replace the SQLite DATABASES configuration with PostgreSQL
-DATABASES = {
+'''DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
         default=os.environ.get(
@@ -107,7 +106,7 @@ DATABASES = {
         ),
         conn_max_age=600
     )
-}
+}'''
 
 
 
