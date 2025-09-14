@@ -211,9 +211,9 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 PAYSTACK_TEST_SECRET_KEY = config("PAYSTACK_SECRET_KEY")
 
-# CELERY BROKER URL FOR REDIS (TO RUN CRON JOBS)
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"   # Redis DB 0 For production, provision a Redis instance for render or upstash
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+# CELERY BROKER URL FOR REDIS (TO RUN CRON JOBS) (for production)
+CELERY_BROKER_URL = "redis://red-d33an58dl3ps738nc0n0:6379"  #"redis://127.0.0.1:6379/0"   # Redis DB 0 For production, provision a Redis instance for render or upstash
+CELERY_RESULT_BACKEND = "redis://red-d33an58dl3ps738nc0n0:6379"   #"redis://127.0.0.1:6379/0"
 
 
 # SECURITY HEADERS (for production)
