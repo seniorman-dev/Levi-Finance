@@ -1,4 +1,4 @@
-Go-Levi Backend 🚀
+Go-Levi 🚀
 
 Pioneering Safer, Smarter Digital Transactions
 
