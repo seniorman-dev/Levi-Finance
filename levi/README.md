@@ -2,12 +2,36 @@ Go-Levi Backend 🚀
 
 Pioneering Safer, Smarter Digital Transactions
 
-Go-Levi is a FinTech backend infrastructure built with Django + Django REST Framework (DRF) & SQLite to power safer, seamless, and smarter digital transactions for everyday users.
+Go-Levi is a FinTech backend infrastructure built with Django + Django REST Framework (DRF) & PostGres to power safer, seamless, and smarter digital transactions for everyday users.
 
-This project focuses on secure wallet management, reliable user authentication, dynamic profile system and efficient transaction processing — all designed to ensure that financial interactions remain trustworthy and smooth.
+This project focuses on secure wallet management, efficient transaction processing, reliable user authenticatio & dynamic profile system — all designed to ensure that financial interactions remain super fast, trustworthy and smooth.
 
 
 ✨ Features
+
+💳 Wallet / Account System
+
+   Create wallet for each user
+
+   Check wallet balance
+
+   Set & update transaction PIN
+
+   Set & update panic PIN (emergency fraud alert system)
+
+💸 Transactions
+
+   View transaction history
+
+   Deposit funds into wallet
+
+   Withdraw funds to registered bank details
+
+   Transfer funds between users (via unique user ID)
+
+   Report suspicious transactions (marks them as frozen)
+
+
 🔑 Authentication & Security
 
    User Signup, Login, Logout
@@ -44,27 +68,6 @@ This project focuses on secure wallet management, reliable user authentication, 
 
    Delete
 
-💳 Wallet / Account System
-
-   Create wallet for each user
-
-   Check wallet balance
-
-   Set & update transaction PIN
-
-   Set & update panic PIN (emergency fraud alert system)
-
-💸 Transactions
-
-   View transaction history
-
-   Deposit funds into wallet
-
-   Withdraw funds to registered bank details
-
-   Transfer funds between users (via unique user ID)
-
-   Report suspicious transactions (marks them as frozen)
 
 📧 Email Notifications
 
