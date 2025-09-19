@@ -58,6 +58,11 @@ urlpatterns = [
     path('api/bank-details/', views.BankDetailListView.as_view(), name='bank-detail-list'), #GET #POST
     path('api/bank-details/<int:pk>/', views.BankDetailDetailView.as_view(), name='bank-detail-detail'), #GET BY ID, #PATCH #DELETE
     
+    #########
+    path("api/fetch-banks/", views.BanksView.as_view(), name='fetch-banks-via-paystack'),  #GET 
+    path("api/resolve-bank-account/<str:account_number>/<str:bank_code>/", views.ResolveAccountView.as_view(), name='resolve-bank-account-via-paystack'),  #GET
+    #########
+    
     # Wallet
     path('api/wallet/', views.WalletView.as_view(), name='wallet'), #GET
     

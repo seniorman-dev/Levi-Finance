@@ -4,6 +4,7 @@ import random
 from django.core.cache import cache
 from django.utils import timezone
 
+import requests
 from rest_framework import status, generics, permissions
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework.response import Response
@@ -398,6 +399,68 @@ class WalletView(generics.RetrieveDestroyAPIView):
         instance.delete()
 
     
+class BanksView(generics.GenericAPIView):
+    """View for fetching banks from Paystack API"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+
+    def fetch_banks(self,):
+        """FETCH LIST OF BANKS FROM PAYSTACK API"""
+        url = "https://api.paystack.co/bank"
+        headers = {
+           "Authorization": f"Bearer {settings.PAYSTACK_TEST_SECRET_KEY}",
+           "Content-Type": "application/json"
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            print("JSON DATA", data)
+            return Response(data=data["data"], status=status.HTTP_200_OK)
+        else:
+           return Response({"error": f"Paystack error: {data.get('message')}"}, status=status.HTTP_400_BAD_REQUEST)
+
+    
+    
+    def get(self, request: Request) -> Response:
+        print("User data", request.data)
+        user = request.user
+        try:
+            self.fetch_banks()
+        except user.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class ResolveAccountView(generics.GenericAPIView):
+    """View for resolving a user's account details via Paystack API"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+
+    def resolve_account(self, account_number: str, bank_code: str):
+        """RESOLVE USER BANK ACCOUNT DETAILS VIA PAYSTACK API"""
+        url = f"https://api.paystack.co/bank/resolve?account_number={account_number}&bank_code={bank_code}"
+        headers = {
+           "Authorization": f"Bearer {settings.PAYSTACK_TEST_SECRET_KEY}",
+           "Content-Type": "application/json"
+        }
+        response = requests.get(url,headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            print("JSON DATA", data)
+            return Response(data=data["data"], status=status.HTTP_200_OK)
+        else:
+           return Response({"error": f"Paystack error: {data.get('message')}"}, status=status.HTTP_400_BAD_REQUEST)
+
+    
+    
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        print("User data", request.data)
+        user = request.user
+        account_number: str = kwargs.get("account_number")  # assuming it's passed in the URL as /xxx/<id>/
+        bank_code: str = kwargs.get("bank_code")
+        try:
+            self.resolve_account(account_number=account_number, bank_code=bank_code)
+        except user.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
 
