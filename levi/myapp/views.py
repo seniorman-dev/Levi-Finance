@@ -402,14 +402,13 @@ class WalletView(generics.RetrieveDestroyAPIView):
 class BanksView(generics.GenericAPIView):
     """View for fetching banks from Paystack API"""
     permission_classes = [permissions.IsAuthenticated]
-    
 
-    def fetch_banks(self,):
+    def fetch_banks(self):
         """FETCH LIST OF BANKS FROM PAYSTACK API"""
         url = "https://api.paystack.co/bank"
         headers = {
-           "Authorization": f"Bearer {settings.PAYSTACK_TEST_SECRET_KEY}",
-           "Content-Type": "application/json"
+            "Authorization": f"Bearer {settings.PAYSTACK_TEST_SECRET_KEY}",
+            "Content-Type": "application/json"
         }
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -417,17 +416,19 @@ class BanksView(generics.GenericAPIView):
             print("JSON DATA", data)
             return Response(data=data["data"], status=status.HTTP_200_OK)
         else:
-           return Response({"error": f"Paystack error: {data.get('message')}"}, status=status.HTTP_400_BAD_REQUEST)
+            # ✅ Fix: `data` is only defined if 200, so use response.json() here
+            data = response.json()
+            print("JSON DATA", data)
+            return Response({"error": f"Paystack error: {data.get('message')}"}, status=status.HTTP_400_BAD_REQUEST)
 
-    
-    
     def get(self, request: Request) -> Response:
         print("User data", request.data)
         user = request.user
-        try:
-            self.fetch_banks()
-        except user.DoesNotExist:
-            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        if not user or not user.is_authenticated:
+           return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        # ✅ Fix: RETURN the result of fetch_banks
+        return self.fetch_banks()
+
         
 
 class ResolveAccountView(generics.GenericAPIView):
@@ -448,6 +449,8 @@ class ResolveAccountView(generics.GenericAPIView):
             print("JSON DATA", data)
             return Response(data=data["data"], status=status.HTTP_200_OK)
         else:
+           data = response.json()
+           print("JSON DATA", data)
            return Response({"error": f"Paystack error: {data.get('message')}"}, status=status.HTTP_400_BAD_REQUEST)
 
     
@@ -457,11 +460,9 @@ class ResolveAccountView(generics.GenericAPIView):
         user = request.user
         account_number: str = kwargs.get("account_number")  # assuming it's passed in the URL as /xxx/<id>/
         bank_code: str = kwargs.get("bank_code")
-        try:
-            self.resolve_account(account_number=account_number, bank_code=bank_code)
-        except user.DoesNotExist:
-            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
+        if not user or not user.is_authenticated:
+           return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        return self.resolve_account(account_number=account_number, bank_code=bank_code)
 
 
 
