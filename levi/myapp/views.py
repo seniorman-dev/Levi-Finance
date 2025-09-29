@@ -778,7 +778,7 @@ class MessageHistoryView(generics.ListAPIView):
         ).order_by("created_at")
         
         
-# 🔹 Get chat history between logged-in user and others users he is chatting with actively
+# 🔹 Get chat history between logged-in user and others users he/she is chatting with actively
 class ChatListView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
