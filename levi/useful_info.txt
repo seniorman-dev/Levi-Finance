@@ -127,6 +127,8 @@ pip freeze > requirements.txt
 #TO RUN DJANGO ASGI app (SOLID FOR HTTP + WEBSOCKET CONNECTIONS)
 >> uvicorn yourproject.asgi:application --reload
 note: instead of using gunicorn to deploy to render, use uvicorn as it supports both http rest apis and websockets.
+(uvicorn levi.asgi:application --host 0.0.0.0 --port $PORT
+)
 
 #asap git commands
 git add requirements.txt
