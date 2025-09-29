@@ -32,6 +32,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Allow all hosts for now, or specify your Render domain
 ALLOWED_HOSTS = [
     "golevi-webservice.onrender.com",
+    "golevi-asgi-webservice.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
