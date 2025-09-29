@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 import os
 import django
 from django.core.asgi import get_asgi_application
-from socketio import ASGIApp
+#from socketio import ASGIApp
 import socketio
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'levi.settings')
