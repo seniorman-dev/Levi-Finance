@@ -788,7 +788,7 @@ class ChatListView(generics.GenericAPIView):
         # Get all user IDs the current user has chatted with
         chat_user_ids = Message.objects.filter(
             Q(sender=user) | Q(recipient=user)
-        ).values_list("sender", "recipient", named=False)
+        ).values_list("sender", "receiver", named=False)
 
         # Flatten and remove self
         user_ids = set()
