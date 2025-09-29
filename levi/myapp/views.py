@@ -1,7 +1,6 @@
 
 import random
 
-from django.core.cache import cache
 from django.utils import timezone
 
 import requests
@@ -24,15 +23,17 @@ from django.core.cache import cache
 
 from .tasks import delete_user_in_5_days
 
-from .models import Notification, User, BankDetail, Wallet, Transaction
+from .models import Notification, User, BankDetail, Wallet, Transaction, Message
 
 from .serializers import (
-    NotificationSerializer, UserRegistrationSerializer, UserLoginSerializer, BasicUserSerializer, KycUpdateSerializer, ProfileUpdateSerializer,
+    MessageSerializer, NotificationSerializer, UserRegistrationSerializer, UserLoginSerializer, BasicUserSerializer, KycUpdateSerializer, ProfileUpdateSerializer,
     BankDetailSerializer, WalletSerializer, TransactionSerializer,
     TransferPinSerializer, PanicPinSerializer,  RecipientCodeSerializer, DepositSerializer, TransferSerializer, BankTransferSerializer, ReportTransactionSerializer,
     EmailSerializer
 )
 
+
+from django.db.models import Q, Max, Subquery, OuterRef
 # Create your views here.
 # myapp/views.py
 
@@ -760,3 +761,81 @@ class NotificationUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     #DRF handles all these internally though
     def perform_destroy(self, instance):
         instance.delete()
+        
+        
+#MESSAGE VIEWS
+# 🔹 Get chat history between logged-in user and another specific user
+class MessageHistoryView(generics.ListAPIView):
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        other_user_id = self.kwargs["user_id"]
+        return Message.objects.filter(
+            Q(sender=user, recipient_id=other_user_id)
+            | Q(sender_id=other_user_id, receiver=user)
+        ).order_by("created_at")
+        
+        
+# 🔹 Get chat history between logged-in user and others users he is chatting with actively
+class ChatListView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: Request):
+        user = request.user
+
+        # Get all user IDs the current user has chatted with
+        chat_user_ids = Message.objects.filter(
+            Q(sender=user) | Q(recipient=user)
+        ).values_list("sender", "recipient", named=False)
+
+        # Flatten and remove self
+        user_ids = set()
+        for sender_id, recipient_id in chat_user_ids:
+            if sender_id != user.id:
+                user_ids.add(sender_id)
+            if recipient_id != user.id:
+                user_ids.add(recipient_id)
+
+        # Prepare subquery to get latest message per user
+        latest_message_subquery = Message.objects.filter(
+            Q(sender=user, recipient=OuterRef("pk")) | Q(sender=OuterRef("pk"), recipient=user)
+        ).order_by("-created_at")
+
+        # Annotate each user with latest message id and timestamp
+        chat_users = User.objects.filter(id__in=user_ids).annotate(
+            last_message_id=Subquery(latest_message_subquery.values("id")[:1]),
+            last_message_time=Subquery(latest_message_subquery.values("created_at")[:1])
+        ).order_by("-last_message_time")
+
+        chat_list = []
+        for u in chat_users:
+            last_message = Message.objects.filter(id=u.last_message_id).first()
+            unread_count = Message.objects.filter(sender=u, recipient=user, is_read=False).count()
+
+            chat_list.append({
+                "user": BasicUserSerializer(u).data,
+                "last_message": MessageSerializer(last_message).data if last_message else None,
+                "unread_count": unread_count,
+            })
+
+        return Response(data=chat_list, status=status.HTTP_200_OK)
+"""✅ Why this is powerful
+
+✅ Single DB query per chat partner (no N*1 lookups)
+✅ Sorted by latest chat activity (like WhatsApp)
+✅ Supports last message preview, timestamp, unread count
+✅ Easily extendable (e.g. to include message type, attachments, etc.)"""
+
+
+
+
+
+# 🔹 Admin: List all messages (optional)
+class AllMessagesView(generics.ListAPIView):
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        return Message.objects.all().order_by("-created_at")

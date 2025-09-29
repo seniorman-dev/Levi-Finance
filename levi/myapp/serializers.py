@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from rest_framework.authtoken.models import Token
-from .models import Notification, User, BankDetail, Wallet, Transaction
+from .models import Notification, User, BankDetail, Wallet, Transaction, Message
 
 
 
@@ -463,3 +463,11 @@ class NotificationSerializer(serializers.ModelSerializer):
             )
 
         return data
+    
+    
+    
+#FOR ONE-TO-ONE MESSAGES
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = "__all__"

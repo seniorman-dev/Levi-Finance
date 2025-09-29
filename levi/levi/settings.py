@@ -36,8 +36,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
 ]
 
-# OR for development, you can allow all hosts (not recommended for production)
-#ALLOWED_HOSTS = ["*"]
+
 
 
 
@@ -52,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #add stuffs here
+    #"channels", #for websockets
     'myapp.apps.MyappConfig',   # explicit & safe # Our Custom App
     'rest_framework',  # For building APIs
     'rest_framework.authtoken',  # For token authentication
@@ -85,6 +85,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'levi.wsgi.application'
+
+
+#FOR CHANNELS CONFIG FOR WEBSOCKETS
+'''ASGI_APPLICATION = "levi.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": ["redis://red-d33an58dl3ps738nc0n0:6379"],  #"CONFIG": { "hosts": [("127.0.0.1", 6379)], },
+        },
+    },
+}'''
+
 
 
 

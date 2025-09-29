@@ -16,14 +16,13 @@ Including another URLconf
 """
 
 # myapp/urls.py
-from django.urls import path
+from django.urls import path, re_path
 from rest_framework.authtoken import views as jay
 from myapp import views
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
 
 
 
@@ -51,6 +50,13 @@ urlpatterns = [
     
     # User Profile
     path('api/user/', views.CurrentUserView.as_view(), name='current-user'),  #fetch current user
+    
+    #chat history
+    path("api/chats-history/", views.ChatListView.as_view(), name="user-chats-history"),
+    path("api/admin/messages/", views.AllMessagesView.as_view(), name="all-messages"),
+
+    
+    
     path('api/profile/update/', views.UpdateProfileView.as_view(), name='update-profile-details'), #PATCH
     path('api/kyc/update/', views.UpdateKycView.as_view(), name='update-kyc'), #PATCH
     

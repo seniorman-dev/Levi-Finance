@@ -572,3 +572,23 @@ class Notification(models.Model):
             name='unique_notification_per_user'
         )
         ordering = ['-created_at'] 
+        
+        
+#MESSAGES MODEL
+class Message(models.Model):
+    """Messages for users"""
+
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_msgs", )
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_msgs",)
+    type = models.CharField(max_length=100)
+    content = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    #HUMAN READABLE CONTEXT
+    def __str__(self):
+        return f"{self.content} - {self.type} ({self.created_at})"
+    
+    class Meta:
+        ordering = ['created_at'] 
