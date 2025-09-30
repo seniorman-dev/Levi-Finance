@@ -52,7 +52,8 @@ urlpatterns = [
     path('api/user/', views.CurrentUserView.as_view(), name='current-user'),  #fetch current user
     
     #chat history
-    path("api/chats-history/", views.ChatListView.as_view(), name="user-chats-history"),
+    path("api/chats-history/", views.ChatListView.as_view(), name="user-chats-history"), 
+    path("api/messages/<str:pk>/", views.MessageHistoryView.as_view(), name="user-specific-messages"),
     path("api/admin/messages/", views.AllMessagesView.as_view(), name="all-messages"),
 
     
