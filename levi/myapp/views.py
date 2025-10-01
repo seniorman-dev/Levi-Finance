@@ -790,7 +790,7 @@ class ChatListView(generics.GenericAPIView):
             Q(sender=user) | Q(recipient=user)
         ).values_list("sender", "receiver", named=False)
 
-        # Flatten and remove self
+        # Flatten and remove self/current looged-in user id
         user_ids = set()
         for sender_id, recipient_id in chat_user_ids:
             if sender_id != user.id:

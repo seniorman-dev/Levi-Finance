@@ -135,3 +135,23 @@ git add requirements.txt
 git commit -m "Added socketio and uvicorn dependencies"
 git push
 
+
+
+#websockets
+| Step | Direction       | Action                          | Event                                |
+| ---- | --------------- | ------------------------------- | ------------------------------------ |
+| 1    | Client → Server | User emits `"get_chat_history"` | `socket.emit('get_chat_history')`    |
+| 2    | Server          | Authenticates user              | via `Authorization` header           |
+| 3    | Server          | Gathers all active chats        | from `Message` + `User` tables       |
+| 4    | Server → Client | Emits chat list                 | `socket.emit('chat_history', {...})` |
+| 5    | Client          | Receives and displays chat list | update chat UI                       |
+
+
+//Flutter Client
+when the user opens the chat screen with a specific person,
+you emit:
+
+socket.emit("mark_as_read", {
+  "sender_id": otherUserId,
+  "receiver_id": currentUserId,
+});
