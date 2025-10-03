@@ -213,7 +213,7 @@ async def get_chat_history(sid, data: dict):
     # Subquery to fetch latest message between user and each chat partner
     latest_message_subquery = Message.objects.filter(
         Q(sender=user, receiver=OuterRef("pk")) | Q(sender=OuterRef("pk"), receiver=user)
-    ).order_by("-timestamp")
+    ).order_by("-created_at")
 
     # Fetch all chat users with their latest message timestamps
     chat_users = await sync_to_async(list)(
