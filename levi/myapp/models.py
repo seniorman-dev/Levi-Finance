@@ -505,23 +505,22 @@ class Transaction(models.Model):
     
     transaction_id = models.CharField(max_length=50, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    # For transfers
+    recipient = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_transactions')
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, default='NGN')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     description = models.TextField(blank=True, null=True)
     
-    # For transfers
-    recipient = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_transactions')
-    
     # For withdrawals
     bank_detail = models.ForeignKey(BankDetail, on_delete=models.SET_NULL, null=True, blank=True)
     
-    # Metadata
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     is_reported = models.BooleanField(default=False)
     report_reason = models.TextField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f"{self.transaction_id} - {self.transaction_type} - {self.amount}{self.currency}"
@@ -592,3 +591,6 @@ class Message(models.Model):
     
     class Meta:
         ordering = ['created_at'] 
+        
+        
+#
