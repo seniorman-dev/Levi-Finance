@@ -58,7 +58,7 @@ urlpatterns = [
     
     # Transaction/Debit Analytics
     path("api/transactions/summary/?month=<int:pk>&year=<int:pk>", views.TransactionSummaryView.as_view(), name="Trx Analytics"),
-
+    path("api/wallet/analytics/<user_id>/", views.AnalyzeUserSpendingView.as_view(), name="Spending Analytics"),
     
     
     path('api/profile/update/', views.UpdateProfileView.as_view(), name='update-profile-details'), #PATCH

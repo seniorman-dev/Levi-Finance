@@ -913,7 +913,7 @@ class AnalyzeUserSpendingView(generics.RetrieveAPIView):
     
     
     
-    def analyze_user_spending(transactions) -> dict[str, Any]:
+    def analyze_user_spending(transactions) -> dict[str, any]:
         if not transactions.exists():
             return {"message": "No transactions available for analysis."}
 
@@ -925,6 +925,7 @@ class AnalyzeUserSpendingView(generics.RetrieveAPIView):
         # Compute daily totals
         daily_summary = df.groupby(['date', 'transaction_type'])['amount'].sum().unstack(fill_value=0)
         daily_summary['net_spend'] = daily_summary.get('withdrawal', 0) - daily_summary.get('deposit', 0)
+        #daily_summary = daily_summary.reindex(columns=['withdrawal','deposit'], fill_value=0)
 
         # Key Metrics
         avg_daily_spend = float(daily_summary.get('withdrawal', 0).mean())
@@ -961,7 +962,7 @@ class AnalyzeUserSpendingView(generics.RetrieveAPIView):
         ]
 
         if avg_daily_spend > avg_deposit:
-            insights.append("You’re spending more than you earn — consider reducing your expenses.")
+            insights.append("You're spending more than you earn — consider reducing your expenses.")
         elif savings_ratio > 0.3:
             insights.append("Great! You're saving a healthy portion of your income.")
         else:
