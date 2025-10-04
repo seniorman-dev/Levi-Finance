@@ -512,6 +512,7 @@ class Transaction(models.Model):
     currency = models.CharField(max_length=3, default='NGN')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     description = models.TextField(blank=True, null=True)
+    category = models.CharField(max_length=150, blank=True, null=True)
     
     # For withdrawals
     bank_detail = models.ForeignKey(BankDetail, on_delete=models.SET_NULL, null=True, blank=True)

@@ -55,6 +55,9 @@ urlpatterns = [
     path("api/chats-history/", views.ChatListView.as_view(), name="user-chats-history"), 
     path("api/messages/<str:pk>/", views.MessageHistoryView.as_view(), name="user-specific-messages"),
     path("api/admin/messages/", views.AllMessagesView.as_view(), name="all-messages"),
+    
+    # Transaction/Debit Analytics
+    path("api/transactions/summary/?month=<int:pk>&year=<int:pk>", views.TransactionSummaryView.as_view(), name="Trx Analytics"),
 
     
     

@@ -2,7 +2,8 @@
 import random
 
 from django.utils import timezone
-
+import pandas as pd
+from sklearn.cluster import KMeans  # scikit-learn is imported via the sklearn namespace
 import requests
 from rest_framework import status, generics, permissions
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
@@ -31,9 +32,10 @@ from .serializers import (
     TransferPinSerializer, PanicPinSerializer,  RecipientCodeSerializer, DepositSerializer, TransferSerializer, BankTransferSerializer, ReportTransactionSerializer,
     EmailSerializer
 )
+import calendar
 
 
-from django.db.models import Q, Max, Subquery, OuterRef
+from django.db.models import Q, Sum, Max, Subquery, OuterRef
 # Create your views here.
 # myapp/views.py
 
@@ -763,6 +765,21 @@ class NotificationUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
         
         
+
+# 🔹 Admin: List all messages (optional)
+class AllMessagesView(generics.ListAPIView):
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        return Message.objects.all().order_by("-created_at")
+    
+        
+        
+        
+        
+        
+        
 #MESSAGE VIEWS
 # 🔹 Get chat history between logged-in user and another specific user
 class MessageHistoryView(generics.ListAPIView):
@@ -831,11 +848,140 @@ class ChatListView(generics.GenericAPIView):
 
 
 
+#  (Total Income / Debit Analytics)    GET /api/transactions/summary/?month=10&year=2025
+class TransactionSummaryView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request: Request):
+        """
+        Returns total income and total debit for a given month/year.
+        """
+        user = request.user
+        month = request.query_params.get('month')
+        year = request.query_params.get('year')
 
-# 🔹 Admin: List all messages (optional)
-class AllMessagesView(generics.ListAPIView):
-    serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAdminUser]
+        # Default to current month and year
+        now = timezone.now()
+        month = int(month) if month else now.month
+        year = int(year) if year else now.year
 
-    def get_queryset(self):
-        return Message.objects.all().order_by("-created_at")
+        # Define month name for readability
+        month_name = calendar.month_name[month]
+
+        # ✅ INCOME = Deposits + Transfers received
+        total_income = Transaction.objects.filter(
+            Q(transaction_type__in=['DEPOSIT', 'TRANSFER']) &
+            (
+                Q(user=user, transaction_type='DEPOSIT') |
+                Q(recipient=user, transaction_type='TRANSFER')
+            ) &
+            Q(status='COMPLETED') &
+            Q(created_at__year=year) &
+            Q(created_at__month=month)
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # ✅ DEBIT = Withdrawals + Transfers sent
+        total_debit = Transaction.objects.filter(
+            Q(transaction_type__in=['WITHDRAWAL', 'TRANSFER']) &
+            (
+            Q(user=user, transaction_type='WITHDRAWAL') |
+            Q(user=user, transaction_type='TRANSFER')
+            ) &
+            Q(status='COMPLETED') &
+            Q(created_at__year=year) &
+            Q(created_at__month=month)
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # ✅ NET SAVINGS = Income - Debit
+        net_savings = total_income - total_debit
+
+        data = {
+            "month": f"{month_name} {year}",
+            "total_income": float(total_income),
+            "total_debit": float(total_debit),
+            "net_savings": float(net_savings),
+        }
+
+        return Response(data=data, status=status.HTTP_200_OK)
+    
+    
+    
+    
+#  (AI-Powered Spending Analytics & Insights)    GET /api/wallet/analytics/<user_id>/
+class AnalyzeUserSpendingView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    
+    
+    def analyze_user_spending(transactions) -> dict[str, Any]:
+        if not transactions.exists():
+            return {"message": "No transactions available for analysis."}
+
+        # Convert QuerySet to pandas DataFrame
+        df = pd.DataFrame(list(transactions.values('amount', 'transaction_type', 'created_at', 'category')))
+        df['created_at'] = pd.to_datetime(df['created_at'])
+        df['date'] = df['created_at'].dt.date
+
+        # Compute daily totals
+        daily_summary = df.groupby(['date', 'transaction_type'])['amount'].sum().unstack(fill_value=0)
+        daily_summary['net_spend'] = daily_summary.get('withdrawal', 0) - daily_summary.get('deposit', 0)
+
+        # Key Metrics
+        avg_daily_spend = float(daily_summary.get('withdrawal', 0).mean())
+        avg_deposit = float(daily_summary.get('deposit', 0).mean())
+
+        total_income = df[df['transaction_type'] == 'deposit']['amount'].sum()
+        total_expense = df[df['transaction_type'] == 'withdrawal']['amount'].sum()
+
+        savings_ratio = float((total_income - total_expense) / total_income) if total_income > 0 else 0
+
+        # AI: Cluster users by their spending patterns
+        X = daily_summary[['withdrawal', 'deposit']].fillna(0)
+        if len(X) > 2:
+            kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+            kmeans.fit(X)
+            labels = kmeans.labels_
+            avg_spend_cluster = X.groupby(labels)['withdrawal'].mean().to_dict()
+
+            # Determine user type
+            user_type = None
+            if avg_daily_spend < avg_deposit * 0.5:
+                user_type = "Saver"
+            elif avg_daily_spend > avg_deposit:
+                user_type = "Spender"
+            else:
+                user_type = "Balanced"
+        else:
+            user_type = "Insufficient data for AI classification"
+
+        # Generate insights
+        insights = [
+            f"Your average daily spend is ${avg_daily_spend:.2f}.",
+            f"Your savings ratio is {savings_ratio * 100:.2f}%.",
+        ]
+
+        if avg_daily_spend > avg_deposit:
+            insights.append("You’re spending more than you earn — consider reducing your expenses.")
+        elif savings_ratio > 0.3:
+            insights.append("Great! You're saving a healthy portion of your income.")
+        else:
+            insights.append("You might want to increase your savings ratio for long-term stability.")
+
+        return {
+            "avg_daily_spend": avg_daily_spend,
+            "avg_deposit": avg_deposit,
+            "savings_ratio": savings_ratio,
+            "user_type": user_type,
+            "insights": insights
+        }
+    
+    
+    
+    def get(self, request: Request,):
+        try:
+            user = request.user
+            transactions = Transaction.objects.filter(user=user)
+            data = self.analyze_user_spending(transactions)
+            return Response(data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
