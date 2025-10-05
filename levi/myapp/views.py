@@ -2,8 +2,13 @@
 import random
 
 from django.utils import timezone
+
+import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans  # scikit-learn is imported via the sklearn namespace
+from datetime import date, timedelta
+from sklearn.linear_model import LinearRegression   # scikit-learn is imported via the sklearn namespace
+from sklearn.cluster import KMeans
+
 import requests
 from rest_framework import status, generics, permissions
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
@@ -15,7 +20,6 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 
 #from django.shortcuts import render
-from django.http import HttpResponse
 from django.contrib.auth import logout, get_user_model
 from django.core.mail import send_mail
 from django.conf import settings
@@ -780,9 +784,14 @@ class AllMessagesView(generics.ListAPIView):
         
         
         
+        
+        
+###############################################################################################################    
 #MESSAGE VIEWS
 # 🔹 Get chat history between logged-in user and another specific user
 class MessageHistoryView(generics.ListAPIView):
+    
+    """Get chat history between logged-in user and another specific user"""
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -797,9 +806,11 @@ class MessageHistoryView(generics.ListAPIView):
         
 # 🔹 Get chat history between logged-in user and others users he/she is chatting with actively
 class ChatListView(generics.GenericAPIView):
+    
+    """Get chat history between logged-in user and others users he/she is chatting with actively"""
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request: Request):
+    def get(self, request: Request) -> Response:
         user = request.user
 
         # Get all user IDs the current user has chatted with
@@ -850,12 +861,14 @@ class ChatListView(generics.GenericAPIView):
 
 #  (Total Income / Debit Analytics)    GET /api/transactions/summary/?month=10&year=2025
 class TransactionSummaryView(generics.RetrieveAPIView):
+    
+    """
+    Returns total income and total debit for a given month/year.
+    """
+    
     permission_classes = [permissions.IsAuthenticated]
     
-    def get(self, request: Request):
-        """
-        Returns total income and total debit for a given month/year.
-        """
+    def get(self, request: Request) -> Response:
         user = request.user
         month = request.query_params.get('month')
         year = request.query_params.get('year')
@@ -868,7 +881,7 @@ class TransactionSummaryView(generics.RetrieveAPIView):
         # Define month name for readability
         month_name = calendar.month_name[month]
 
-        # ✅ INCOME = Deposits + Transfers received
+        # INCOME = Deposits + Transfers received
         total_income = Transaction.objects.filter(
             Q(transaction_type__in=['DEPOSIT', 'TRANSFER']) &
             (
@@ -880,7 +893,7 @@ class TransactionSummaryView(generics.RetrieveAPIView):
             Q(created_at__month=month)
         ).aggregate(total=Sum('amount'))['total'] or 0
 
-        # ✅ DEBIT = Withdrawals + Transfers sent
+        # DEBIT = Withdrawals + Transfers sent
         total_debit = Transaction.objects.filter(
             Q(transaction_type__in=['WITHDRAWAL', 'TRANSFER']) &
             (
@@ -892,7 +905,7 @@ class TransactionSummaryView(generics.RetrieveAPIView):
             Q(created_at__month=month)
         ).aggregate(total=Sum('amount'))['total'] or 0
 
-        # ✅ NET SAVINGS = Income - Debit
+        # NET SAVINGS = Income - Debit
         net_savings = total_income - total_debit
 
         data = {
@@ -906,46 +919,72 @@ class TransactionSummaryView(generics.RetrieveAPIView):
     
     
     
+#  (AI-Powered Spending Analytics & Insights API)  GET /api/transactions/anallytics/
+class SpendingAnalyticsView(generics.RetrieveAPIView):
     
-#  (AI-Powered Spending Analytics & Insights)    GET /api/wallet/analytics/<user_id>/
-class AnalyzeUserSpendingView(generics.RetrieveAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    
-    
-    
-    def analyze_user_spending(transactions) -> dict[str, any]:
-        if not transactions.exists():
-            return {"message": "No transactions available for analysis."}
+    """
+    AI-Powered Spending Analytics & Insights Endpoint
 
-        # Convert QuerySet to pandas DataFrame
-        df = pd.DataFrame(list(transactions.values('amount', 'transaction_type', 'created_at', 'category')))
+    This endpoint analyzes a user's transaction history to generate
+    intelligent financial insights using pandas and scikit-learn (KMeans clustering).
+
+    It computes:
+        - Average daily spending
+        - Frequency of deposits and withdrawals
+        - Savings ratio
+        - Spending category classification (Saver / Spender / Balanced)
+        - AI-generated insights & advice
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        user = request.user
+
+        # Fetch all completed transactions of this user
+        transactions = Transaction.objects.filter(user=user, status="COMPLETED")
+
+        # Handle case where user has no transactions yet
+        if not transactions.exists():
+            return Response(
+                {"message": "No transaction data available for spending analysis."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Convert queryset to a pandas DataFrame
+        df = pd.DataFrame(list(transactions.values(
+            'amount', 'transaction_type', 'created_at'
+        )))
+
+        # Convert date fields to datetime and extract date only
         df['created_at'] = pd.to_datetime(df['created_at'])
         df['date'] = df['created_at'].dt.date
 
-        # Compute daily totals
+        # Group by date and transaction type to summarize daily totals
         daily_summary = df.groupby(['date', 'transaction_type'])['amount'].sum().unstack(fill_value=0)
-        daily_summary['net_spend'] = daily_summary.get('withdrawal', 0) - daily_summary.get('deposit', 0)
-        #daily_summary = daily_summary.reindex(columns=['withdrawal','deposit'], fill_value=0)
 
-        # Key Metrics
-        avg_daily_spend = float(daily_summary.get('withdrawal', 0).mean())
-        avg_deposit = float(daily_summary.get('deposit', 0).mean())
+        # Calculate daily net spending (withdrawals - deposits)
+        daily_summary['net_spend'] = daily_summary.get('WITHDRAWAL', 0) - daily_summary.get('DEPOSIT', 0)
 
-        total_income = df[df['transaction_type'] == 'deposit']['amount'].sum()
-        total_expense = df[df['transaction_type'] == 'withdrawal']['amount'].sum()
+        # Calculate core financial metrics
+        avg_daily_spend = float(daily_summary.get('WITHDRAWAL', 0).mean())
+        avg_deposit = float(daily_summary.get('DEPOSIT', 0).mean())
 
+        total_income = df[df['transaction_type'] == 'DEPOSIT']['amount'].sum()
+        total_expense = df[df['transaction_type'] == 'WITHDRAWAL']['amount'].sum()
+
+        # Savings ratio = (income - expenses) / income
         savings_ratio = float((total_income - total_expense) / total_income) if total_income > 0 else 0
 
-        # AI: Cluster users by their spending patterns
-        X = daily_summary[['withdrawal', 'deposit']].fillna(0)
-        if len(X) > 2:
+        # Train a simple clustering model to classify spending behavior
+        X = daily_summary[['WITHDRAWAL', 'DEPOSIT']].fillna(0)
+
+        if len(X) > 2:  # Ensure we have enough data to cluster
             kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
             kmeans.fit(X)
             labels = kmeans.labels_
-            avg_spend_cluster = X.groupby(labels)['withdrawal'].mean().to_dict()
 
-            # Determine user type
-            user_type = None
+            # Determine user type based on spend/deposit ratio
             if avg_daily_spend < avg_deposit * 0.5:
                 user_type = "Saver"
             elif avg_daily_spend > avg_deposit:
@@ -955,34 +994,97 @@ class AnalyzeUserSpendingView(generics.RetrieveAPIView):
         else:
             user_type = "Insufficient data for AI classification"
 
-        # Generate insights
+        # Generate meaningful insights based on computed values
         insights = [
-            f"Your average daily spend is ${avg_daily_spend:.2f}.",
-            f"Your savings ratio is {savings_ratio * 100:.2f}%.",
+            f"Your average daily spend is ₦{avg_daily_spend:.2f}.",
+            f"Your savings ratio is {savings_ratio * 100:.2f}%."
         ]
 
+        # Add personalized advice
         if avg_daily_spend > avg_deposit:
-            insights.append("You're spending more than you earn — consider reducing your expenses.")
+            insights.append("You're spending more than you earn — consider reducing expenses or setting a spending limit.")
         elif savings_ratio > 0.3:
-            insights.append("Great! You're saving a healthy portion of your income.")
+            insights.append("Excellent! You're saving a healthy portion of your income.")
         else:
-            insights.append("You might want to increase your savings ratio for long-term stability.")
+            insights.append("Consider increasing your savings ratio for long-term financial stability.")
 
-        return {
-            "avg_daily_spend": avg_daily_spend,
-            "avg_deposit": avg_deposit,
-            "savings_ratio": savings_ratio,
+        # Construct the response
+        analytics_data = {
+            "avg_daily_spend": round(avg_daily_spend, 2),
+            "avg_deposit": round(avg_deposit, 2),
+            "total_income": float(total_income),
+            "total_expense": float(total_expense),
+            "savings_ratio": round(savings_ratio, 2),
             "user_type": user_type,
-            "insights": insights
+            "insights": insights,
         }
+
+        return Response(analytics_data, status=status.HTTP_200_OK)
+
+
     
-    
-    
-    def get(self, request: Request,):
-        try:
-            user = request.user
-            transactions = Transaction.objects.filter(user=user)
-            data = self.analyze_user_spending(transactions)
-            return Response(data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+#  (SMART SAVINGS RECOMMENDATIONS API)     GET   /api/savings-recommendation/<int:month_num>/
+class SmartSavingsRecommendationView(generics.GenericAPIView): 
+    """View for smart savings recommendation"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        user = request.user
+        month_num = kwargs.get("month_num")
+        
+        # Step 1: Get last X months of transactions
+        months_ago = date.today() - timedelta(days=month_num*30)
+        transactions = Transaction.objects.filter(user=user, created_at__gte=months_ago)
+
+        
+        if not transactions.exists():
+            return Response({"error": "No transaction data available for smart savings recommendations."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Step 2: Create a DataFrame
+        df = pd.DataFrame(list(transactions.values('date', 'type', 'amount')))
+        
+        # Step 3: Extract monthly summaries
+        df['month'] = pd.to_datetime(df['date']).dt.to_period('M')
+        monthly_summary = df.groupby(['month', 'type'])['amount'].sum().unstack(fill_value=0)
+        
+        # Ensure columns exist even if empty
+        if 'income' not in monthly_summary:
+            monthly_summary['income'] = 0
+        if 'expense' not in monthly_summary:
+            monthly_summary['expense'] = 0
+            
+            
+        # Step 4: Calculate monthly surplus
+        monthly_summary['surplus'] = monthly_summary['income'] - monthly_summary['expense']
+        monthly_summary.reset_index(inplace=True)
+
+        # Step 5: Prepare data for regression (predict next month’s values)
+        X = np.arange(len(monthly_summary)).reshape(-1, 1)
+
+        income_model = LinearRegression()
+        expense_model = LinearRegression()
+
+        income_model.fit(X, monthly_summary['income'])
+        expense_model.fit(X, monthly_summary['expense'])
+
+        next_month_index = np.array([[len(monthly_summary)]])
+        predicted_income = income_model.predict(next_month_index)[0]
+        predicted_expense = expense_model.predict(next_month_index)[0]
+        predicted_surplus = predicted_income - predicted_expense
+
+        # Step 6: Recommend savings (20–30% of predicted surplus)
+        recommended_saving = predicted_surplus * 0.25  # middle ratio
+
+        return Response({
+            "user": user.first_name,
+            "average_monthly_income": round(monthly_summary['income'].mean(), 2),
+            "average_monthly_expense": round(monthly_summary['expense'].mean(), 2),
+            "average_monthly_surplus": round(monthly_summary['surplus'].mean(), 2),
+            "predicted_income_next_month": round(predicted_income, 2),
+            "predicted_expense_next_month": round(predicted_expense, 2),
+            "predicted_surplus_next_month": round(predicted_surplus, 2),
+            "recommended_savings": round(recommended_saving, 2),
+            "message": f"You can safely save about ₦{recommended_saving:,.2f} this month."
+        },
+        status=status.HTTP_200_OK
+    )

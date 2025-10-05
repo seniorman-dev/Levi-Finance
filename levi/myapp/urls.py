@@ -56,9 +56,15 @@ urlpatterns = [
     path("api/messages/<str:pk>/", views.MessageHistoryView.as_view(), name="user-specific-messages"),
     path("api/admin/messages/", views.AllMessagesView.as_view(), name="all-messages"),
     
+    
+    
+    
     # Transaction/Debit Analytics
-    path("api/transactions/summary/?month=<int:pk>&year=<int:pk>", views.TransactionSummaryView.as_view(), name="Trx Analytics"),
-    path("api/wallet/analytics/<user_id>/", views.AnalyzeUserSpendingView.as_view(), name="Spending Analytics"),
+    path("api/transactions/summary/", views.TransactionSummaryView.as_view(), name="transaction-analytics"),  #?month=<int:pk>&year=<int:pk>
+    path('api/savings-recommendation/<int:month_num>/', views.SmartSavingsRecommendationView.as_view(), name='smart-savings-recommendations'), 
+    path("api/transactions/analytics/", views.SpendingAnalyticsView.as_view(), name="spending-analytics"),
+    
+    
     
     
     path('api/profile/update/', views.UpdateProfileView.as_view(), name='update-profile-details'), #PATCH
