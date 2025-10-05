@@ -177,13 +177,9 @@ async def mark_as_read(sid, data: dict):
     '''sender_sid = connected_users.get(str(sender_id))
     if sender_sid:
         await sio.emit("messages_read", {"receiver_id": receiver_id}, to=sender_sid)'''
+        
 
 
-
-
-# -------------------------------------
-# 🔹 GET CHAT HISTORY EVENT
-# -------------------------------------
 @sio.event
 async def get_chat_history(sid, data: dict):
     """
@@ -254,4 +250,4 @@ async def get_chat_history(sid, data: dict):
 
     # Emit the chat list back to the user
     await sio.emit("chat_history", {"chats": chat_list}, to=sid)
-    print(f"✅ Sent chat history to user {user_id}")
+    print(f" Sent chat history to user {user_id}")

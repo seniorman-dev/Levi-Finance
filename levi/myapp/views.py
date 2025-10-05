@@ -1004,7 +1004,7 @@ class SpendingAnalyticsView(generics.RetrieveAPIView):
         if avg_daily_spend > avg_deposit:
             insights.append("You're spending more than you earn — consider reducing expenses or setting a spending limit.")
         elif savings_ratio > 0.3:
-            insights.append("Excellent! You're saving a healthy portion of your income.")
+            insights.append("Excellent! You're saving a heg calthy portion of your income.")
         else:
             insights.append("Consider increasing your savings ratio for long-term financial stability.")
 
@@ -1041,10 +1041,10 @@ class SmartSavingsRecommendationView(generics.GenericAPIView):
             return Response({"error": "No transaction data available for smart savings recommendations."}, status=status.HTTP_404_NOT_FOUND)
 
         # Step 2: Create a DataFrame
-        df = pd.DataFrame(list(transactions.values('date', 'type', 'amount')))
+        df = pd.DataFrame(list(transactions.values('created_at', 'type', 'amount')))
         
         # Step 3: Extract monthly summaries
-        df['month'] = pd.to_datetime(df['date']).dt.to_period('M')
+        df['month'] = pd.to_datetime(df['created_at']).dt.to_period('M')
         monthly_summary = df.groupby(['month', 'type'])['amount'].sum().unstack(fill_value=0)
         
         # Ensure columns exist even if empty
